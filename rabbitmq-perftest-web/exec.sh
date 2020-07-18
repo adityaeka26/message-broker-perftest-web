@@ -1,0 +1,1 @@
+./rabbitmq-test/bin/runjava com.rabbitmq.perf.PerfTest --producers 1 --consumers 0 --predeclared --routing-key rk --queue q --use-millis -h amqp://aditya:aditya@adityaeka.xyz -c 1 -C 100000 --size 100000

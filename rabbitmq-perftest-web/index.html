@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>RabbitMQ Perftest Web</title>
+        <link rel="shortcut icon" href="img/favicon.ico">
+        <link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap.min.css">
+        <link rel="stylesheet" type="text/css" href="chartjs/Chart.min.css">
+    </head>
+    
+    <body>
+        <div class="container-sm mt-3 mb-3">
+            <div class="row mt-2 mb-2 mx-auto">
+                <h2>RabbitMQ Perftest Web</h2>
+            </div>            
+            <div class="row">
+                <div class="col">
+                    <div class="form-group">
+                        <label>Host</label>
+                        <input type="text" class="form-control" id="host" value="192.168.1.52">
+                        <!-- <select class="form-control" id="host">
+                          <option value="192.168.1.52">192.168.1.52 (Fog)</option>
+                          <option value="adityaeka.xyz">adityaeka.xyz (Cloud)</option>
+                        </select> -->
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="form-group">
+                        <label>Username</label>
+                        <input type="text" class="form-control" id="username" value="aditya">
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="text" class="form-control" id="password" value="aditya">
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="form-group">
+                        <button style="margin-top:32px;" class="form-control btn btn-primary w-100" onclick="connect()">Connect</button>
+                    </div>                    
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col d-none">
+                    <div class="form-group">
+                        <label>Jumlah producer</label>
+                        <input type="number" class="form-control" id="producers" value="1">
+                    </div>
+                </div>
+                <div class="col d-none">
+                    <div class="form-group">
+                        <label>Jumlah consumer</label>
+                        <input type="number" class="form-control" id="consumers" value="0">
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="form-group">
+                        <label>Number of messages</label>
+                        <input type="num" class="form-control" id="num" value="1000">
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="form-group">
+                       <label>Message size</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="size" value="100000">
+                            <div class="input-group-append">
+                                <span class="input-group-text">Byte</span>
+                            </div>
+                        </div> 
+                    </div>                    
+                </div>
+                <div class="col">
+                    <button id="startButton" class="btn btn-primary w-100" style="margin-top:32px;" onclick="start()" disabled>START!</button>
+                </div>
+                <div class="col">
+                    <button id="stopButton" class="btn btn-danger w-100" style="margin-top:32px;" onclick="stop()" disabled>STOP!</button>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col">
+                    <canvas id="throughput"></canvas>
+                </div>
+                <div class="col">
+                    <canvas id="latency"></canvas>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col d-none">
+                    <canvas id="cpu"></canvas>
+                </div>
+                <div class="col">
+                    <canvas id="memory"></canvas>
+                </div>      
+                <div class="col">
+                    <canvas id="disk"></canvas>
+                </div>      
+            </div>
+
+            <div class="row mx-auto" style="font-size: 10px;">
+                <div style="text-align: right; width: 100%;">
+                    by Aditya Eka
+                </div>                
+            </div>
+
+            <div class="row">
+                <div class="col">
+                    <div id="resultThroughput"></div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col">
+                    <div id="resultLatency"></div>
+                </div>
+            </div>           
+
+            <div class="row">
+                <div class="col">
+                    <div id="resultCPU"></div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col">
+                    <div id="resultMemory"></div>
+                </div>
+            </div>
+
+             <div class="row">
+                <div class="col">
+                    <div id="resultDisk"></div>
+                </div>
+            </div>
+        </div>
+        
+        <script src="js/jquery.min.js"></script>
+        <script src="socket.io/socket.io.js"></script>
+        <script src="chartjs/Chart.min.js"></script>
+        <script src="bootstrap/js/bootstrap.min.js"></script>
+        
+        <script>
+            var chartThroughput = new Chart(document.getElementById('throughput').getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Throughput',
+                        data: [],
+                        borderColor: '#ff0000',
+                        fill: false
+                    }],
+                },
+                options: { 
+                    responsive: true,
+                    tooltips: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    hover: {
+                        mode: 'nearest',
+                        intersect: true
+                    },
+                    scales: {
+                        xAxes: [{
+						    ticks: {
+						        autoSkip: true,
+						        maxTicksLimit: 10
+						    }
+						}],
+                        yAxes: [{
+                            display: true,
+                            scaleLabel: {
+                                display: true,
+                                labelString: 'MB/detik'
+                            }
+                        }]
+                    }
+                }
+            })
+
+            var chartLatency = new Chart(document.getElementById('latency').getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Latency',
+                        data: [],
+                        borderColor: '#ff0080',
+                        fill: false
+                    }],
+                },
+                options: { 
+                    responsive: true,
+                    tooltips: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    hover: {
+                        mode: 'nearest',
+                        intersect: true
+                    },
+                    scales: {
+                        xAxes: [{
+						    ticks: {
+						        autoSkip: true,
+						        maxTicksLimit: 10
+						    }
+						}],
+                        yAxes: [{
+                            display: true,
+                            scaleLabel: {
+                                display: true,
+                                labelString: 'milidetik'
+                            }
+                        }]
+                    }
+                }
+            })
+
+            var chartCPU = new Chart(document.getElementById('cpu').getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'CPU',
+                        data: [],
+                        borderColor: '#ff00ff',
+                        fill: false
+                    }],
+                },
+                options: { 
+                    responsive: true,
+                    tooltips: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    hover: {
+                        mode: 'nearest',
+                        intersect: true
+                    },
+                    scales: {
+                    	xAxes: [{
+						    ticks: {
+						        autoSkip: true,
+						        maxTicksLimit: 10
+						    }
+						}],
+                        yAxes: [{
+                            display: true,
+                            scaleLabel: {
+                                display: true,
+                                labelString: '%'
+                            }
+                        }]
+                    }
+                }
+            })
+
+            var chartMemory = new Chart(document.getElementById('memory').getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Memory',
+                        data: [],
+                        borderColor: '#8000ff',
+                        fill: false
+                    }],
+                },
+                options: { 
+                    responsive: true,
+                    tooltips: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    hover: {
+                        mode: 'nearest',
+                        intersect: true
+                    },
+                    scales: {
+                    	xAxes: [{
+						    ticks: {
+						        autoSkip: true,
+						        maxTicksLimit: 10
+						    }
+						}],
+                        yAxes: [{
+                            display: true,
+                            scaleLabel: {
+                                display: true,
+                                labelString: 'MB'
+                            }
+                        }]
+                    }
+                }
+            })
+
+            var chartDisk = new Chart(document.getElementById('disk').getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Disk',
+                        data: [],
+                        borderColor: '#0000ff',
+                        fill: false
+                    }],
+                },
+                options: { 
+                    responsive: true,
+                    tooltips: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    hover: {
+                        mode: 'nearest',
+                        intersect: true
+                    },
+                    scales: {
+                        xAxes: [{
+                            ticks: {
+                                autoSkip: true,
+                                maxTicksLimit: 10
+                            }
+                        }],
+                        yAxes: [{
+                            display: true,
+                            scaleLabel: {
+                                display: true,
+                                labelString: '%'
+                            }
+                        }]
+                    }
+                }
+            })
+
+            const socket = io()
+            var socket2
+
+            function connect() {
+                var host = document.getElementById('host').value
+                socket2 = io.connect(host+':3000')
+
+                socket2.on('event', function(data) {
+                    console.log('CPU: '+data.cpu)
+                    console.log('Memory: '+data.memory)
+                    console.log('Disk: '+data.disk)
+
+                    if (data.cpu != null) {
+                        numCPU = numCPU + 1
+                        chartCPU.data.labels.push(numCPU)
+                        chartCPU.data.datasets[0].data.push(data.cpu)
+                        chartCPU.update()
+                    }
+                    
+                    if (data.memory != null) {
+                        numMemory = numMemory + 1
+                        chartMemory.data.labels.push(numMemory)
+                        chartMemory.data.datasets[0].data.push(data.memory)
+                        chartMemory.update()
+                    }
+
+                    if (data.disk != null) {
+                        numDisk = numDisk + 1
+                        chartDisk.data.labels.push(numDisk)
+                        chartDisk.data.datasets[0].data.push(data.disk)
+                        chartDisk.update()
+                    }
+                })
+
+                socket2.on('connected', function(data) {
+                    console.log('Connected to broker')
+                    document.getElementById('startButton').disabled = false
+                    document.getElementById('stopButton').disabled = false
+                })
+            }
+
+            window.onload = function() {
+                var status = 'stop'
+                console.log('Status: '+status)  
+            }
+
+            var numLatency = 0
+            var numThroughput = 0
+
+            socket.on('testerEvent', function(data) {
+                if (data.description.search('sent') != -1) {
+                    // console.log(data.description)
+                    var throughput = data.throughput / 1048576
+                    throughput =  throughput.toFixed(2)
+                    console.log('Latency: '+data.latency)
+                    console.log('Throughput: '+throughput)
+
+                    numLatency += 1
+                    chartLatency.data.labels.push(numLatency)
+                    chartLatency.data.datasets[0].data.push(data.latency)
+                    chartLatency.update()
+
+                    numThroughput += 1
+                    chartThroughput.data.labels.push(numThroughput)
+                    chartThroughput.data.datasets[0].data.push(throughput)
+                    chartThroughput.update()
+                }
+            })
+
+            socket.on('status', function(data) {
+                status = data.status
+                console.log('Status: '+status)
+            })
+
+            var numCPU = 0
+            var numMemory = 0
+            var numDisk = 0
+
+            socket.on('stop', function(data) {
+                setTimeout(function() { 
+                    stop()
+                }, 1000);
+            })
+
+            function start() {
+                if (status == 'start') {
+                    alert('Already started!')
+                } else {
+                    socket.emit('start', {
+                        id: event.target,
+                        host: document.getElementById('host').value,
+                        username: document.getElementById('username').value,
+                        password: document.getElementById('password').value,
+                        producers: document.getElementById('producers').value,
+                        consumers: document.getElementById('consumers').value,
+                        num: document.getElementById('num').value,
+                        size: document.getElementById('size').value,
+                    })
+
+                    socket2.emit('start', {
+                        id: event.target
+                    })
+
+                    document.getElementById("resultThroughput").innerHTML = ""
+                    document.getElementById("resultLatency").innerHTML = ""
+                    document.getElementById("resultCPU").innerHTML = ""
+                    document.getElementById("resultMemory").innerHTML = ""
+                    document.getElementById("resultDisk").innerHTML = ""
+
+                    chartThroughput.data.labels = []
+                    chartThroughput.data.datasets[0].data = []
+                    chartThroughput.update()
+
+                    chartLatency.data.labels = []
+                    chartLatency.data.datasets[0].data = []
+                    chartLatency.update()
+
+                    chartCPU.data.labels = []
+                    chartCPU.data.datasets[0].data = []
+                    chartCPU.update()
+
+                    chartMemory.data.labels = []
+                    chartMemory.data.datasets[0].data = []
+                    chartMemory.update()
+
+                    chartDisk.data.labels = []
+                    chartDisk.data.datasets[0].data = []
+                    chartDisk.update()
+
+                    numLatency = 0
+                    numThroughput = 0
+                    numCPU = 0
+                    numMemory = 0
+                    numDisk = 0
+                }                
+            }
+            function stop() {
+                socket.emit('stop', {})
+                socket2.emit('stop', {})
+                setTimeout(function() { 
+                    status = 'stop'
+                    console.log('Status: '+status)
+                }, 1000);                
+
+                var sumThroughput = 0
+                for (var i = 0; i < chartThroughput.data.datasets[0].data.length; i++) {
+                    sumThroughput += parseFloat(chartThroughput.data.datasets[0].data[i])
+                }
+                var avgThroughput = sumThroughput/chartThroughput.data.datasets[0].data.length
+
+                var sumLatency = 0
+                for (var i = 0; i < chartLatency.data.datasets[0].data.length; i++) {
+                    sumLatency += parseFloat(chartLatency.data.datasets[0].data[i])
+                }
+                var avgLatency = sumLatency/chartLatency.data.datasets[0].data.length
+
+                var sumCPU = 0
+                for (var i = 0; i < chartCPU.data.datasets[0].data.length; i++) {
+                    sumCPU += parseFloat(chartCPU.data.datasets[0].data[i])
+                }
+                var avgCPU = sumCPU/chartCPU.data.datasets[0].data.length
+
+                var sumMemory = 0
+                for (var i = 0; i < chartMemory.data.datasets[0].data.length; i++) {
+                    sumMemory += parseFloat(chartMemory.data.datasets[0].data[i])
+                }
+                var avgMemory = sumMemory/chartMemory.data.datasets[0].data.length
+
+                var sumDisk = 0
+                for (var i = 0; i < chartDisk.data.datasets[0].data.length; i++) {
+                    sumDisk += parseFloat(chartDisk.data.datasets[0].data[i])
+                }
+                var avgDisk = sumDisk/chartDisk.data.datasets[0].data.length
+
+                document.getElementById("resultThroughput").innerHTML = "Throughput: "+avgThroughput.toFixed(2)+" MB/detik"
+                document.getElementById("resultLatency").innerHTML = "Latency: "+avgLatency.toFixed(2)+" milidetik"
+                document.getElementById("resultCPU").innerHTML = "CPU: "+avgCPU.toFixed(2)+" %"
+                document.getElementById("resultMemory").innerHTML = "Memory: "+avgMemory.toFixed(2)+" MB"
+                document.getElementById("resultDisk").innerHTML = "Disk: "+avgDisk.toFixed(2)+" %"
+            }
+        </script>
+    </body>
+</html>
