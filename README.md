@@ -1,13 +1,17 @@
 # Message Broker Performance Test with Dashboard
 
-## RabbitMQ
+A tool to calculate message broker performance. Current supported message broker: RabbitMQ, Apache Kafka.
+
+## Installation
+
+### RabbitMQ
 
 Run this command on your producer device
 ```
 docker run -p 3000:3000 adityaeka26/rabbitmq-perftest-web:1.2
 ```
 
-## Kafka
+### Kafka
 
 Run this command on your producer device
 ```
