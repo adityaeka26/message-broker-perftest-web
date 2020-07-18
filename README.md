@@ -8,7 +8,7 @@ A tool to calculate message broker performance. Current supported message broker
 
 Run this command on your broker device first:
 ```
-docker run -p 3000:3000 adityaeka26/usage-perftest:1.1
+docker run -p 3000:3000 adityaeka26/usage-perftest:1.2
 ```
 
 #### RabbitMQ

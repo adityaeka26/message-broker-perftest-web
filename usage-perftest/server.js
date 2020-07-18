@@ -7,6 +7,7 @@ const http = require('http').Server(app)
 const io = require('socket.io')(http)
 const kill  = require('tree-kill')
 const find = require('find-process');
+const os = require('os');
 
 io.on('connection', function(socket) {
     console.log('A user connected!')
@@ -31,12 +32,13 @@ io.on('connection', function(socket) {
 		   		cpu = null
 		   	}  	
 
-		   	memory_status = text.indexOf('3072M')
-		   	memory_start = text.indexOf('3072M')+6
+		   	memory_status = text.indexOf('M ')
+		   	memory_start = text.indexOf('M ')+1
 		   	memory_end = text.indexOf('M', memory_start)	
 		   	if (memory_status != -1) {
+		   		memory_total = parseInt(os.totalmem()) / 1048576
 		   		memory = text.substring(memory_start, memory_end)
-		   		memory = 3072 - parseInt(memory)
+		   		memory = memory_total - parseInt(memory)
 		   	} else {
 		   		memory = null
 		   	}
