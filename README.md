@@ -2,6 +2,8 @@
 
 A tool to calculate message broker performance. Current supported message broker: RabbitMQ, Apache Kafka.
 
+![broker-perftest](https://adityaeka.com/broker-perftest)
+
 ## Installation
 
 Run this command on your broker device first:
