@@ -1,0 +1,17 @@
+{
+  "name": "usage-perftest-web",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "adityaeka26",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1",
+    "find-process": "^1.4.3",
+    "socket.io": "^2.3.0",
+    "tree-kill": "^1.2.2"
+  }
+}
