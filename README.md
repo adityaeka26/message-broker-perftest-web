@@ -1,6 +1,6 @@
 # Message Broker Performance Test with Dashboard
 
-A tool to calculate message broker performance. Current supported message broker: RabbitMQ, Apache Kafka.
+A tool to calculate message broker performance. Current supported message broker: RabbitMQ, Apache Kafka. To run this performance test tool, you must install Docker or you can manually build it.
 
 ![broker-perftest](https://adityaeka.com/broker-perftest)
 
