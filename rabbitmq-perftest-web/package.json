@@ -5,7 +5,7 @@
   "main": "server.js",
   "dependencies": {
     "child_process": "^1.0.2",
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "http": "^0.0.1-security",
     "socket.io": "^2.4.0",
     "socketio": "^1.0.0",
