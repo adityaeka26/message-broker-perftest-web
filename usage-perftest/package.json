@@ -9,7 +9,7 @@
   "author": "adityaeka26",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "find-process": "^1.4.3",
     "socket.io": "^2.4.0",
     "tree-kill": "^1.2.2"
